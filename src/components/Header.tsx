@@ -23,14 +23,23 @@ export function Header() {
           </span>
           Craftroll
         </Link>
-        <nav className="hidden items-center gap-6 text-sm md:flex">
+        <nav className="hidden items-center gap-5 text-sm md:flex">
           <Link to="/browse" className="text-muted-foreground hover:text-foreground" activeProps={{ className: "text-foreground font-medium" }}>
-            Browse
+            Freelancers
+          </Link>
+          <Link to="/jobs" className="text-muted-foreground hover:text-foreground" activeProps={{ className: "text-foreground font-medium" }}>
+            Jobs
           </Link>
           {user && (
             <>
               <Link to="/dashboard" className="text-muted-foreground hover:text-foreground" activeProps={{ className: "text-foreground font-medium" }}>
                 Dashboard
+              </Link>
+              <Link to="/proposals" className="text-muted-foreground hover:text-foreground" activeProps={{ className: "text-foreground font-medium" }}>
+                Proposals
+              </Link>
+              <Link to="/saved" className="text-muted-foreground hover:text-foreground" activeProps={{ className: "text-foreground font-medium" }}>
+                Saved
               </Link>
               <Link to="/messages" className="text-muted-foreground hover:text-foreground" activeProps={{ className: "text-foreground font-medium" }}>
                 Messages

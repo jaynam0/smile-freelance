@@ -17,10 +17,13 @@ export type Database = {
       bookings: {
         Row: {
           client_id: string
+          contract_type: Database["public"]["Enums"]["contract_type"]
           created_at: string
           description: string | null
           freelancer_id: string
+          hourly_rate: number | null
           id: string
+          job_post_id: string | null
           price: number | null
           scheduled_for: string | null
           status: Database["public"]["Enums"]["booking_status"]
@@ -29,10 +32,13 @@ export type Database = {
         }
         Insert: {
           client_id: string
+          contract_type?: Database["public"]["Enums"]["contract_type"]
           created_at?: string
           description?: string | null
           freelancer_id: string
+          hourly_rate?: number | null
           id?: string
+          job_post_id?: string | null
           price?: number | null
           scheduled_for?: string | null
           status?: Database["public"]["Enums"]["booking_status"]
@@ -41,10 +47,13 @@ export type Database = {
         }
         Update: {
           client_id?: string
+          contract_type?: Database["public"]["Enums"]["contract_type"]
           created_at?: string
           description?: string | null
           freelancer_id?: string
+          hourly_rate?: number | null
           id?: string
+          job_post_id?: string | null
           price?: number | null
           scheduled_for?: string | null
           status?: Database["public"]["Enums"]["booking_status"]
@@ -52,6 +61,59 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      job_posts: {
+        Row: {
+          budget_max: number | null
+          budget_min: number | null
+          budget_type: Database["public"]["Enums"]["budget_type"]
+          category: string | null
+          client_id: string
+          created_at: string
+          description: string
+          id: string
+          skills: string[] | null
+          status: Database["public"]["Enums"]["job_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          budget_max?: number | null
+          budget_min?: number | null
+          budget_type?: Database["public"]["Enums"]["budget_type"]
+          category?: string | null
+          client_id: string
+          created_at?: string
+          description: string
+          id?: string
+          skills?: string[] | null
+          status?: Database["public"]["Enums"]["job_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          budget_max?: number | null
+          budget_min?: number | null
+          budget_type?: Database["public"]["Enums"]["budget_type"]
+          category?: string | null
+          client_id?: string
+          created_at?: string
+          description?: string
+          id?: string
+          skills?: string[] | null
+          status?: Database["public"]["Enums"]["job_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_posts_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       messages: {
         Row: {
@@ -85,41 +147,148 @@ export type Database = {
           },
         ]
       }
+      milestones: {
+        Row: {
+          amount: number
+          booking_id: string
+          created_at: string
+          due_date: string | null
+          id: string
+          order_index: number
+          status: Database["public"]["Enums"]["milestone_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          booking_id: string
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          order_index?: number
+          status?: Database["public"]["Enums"]["milestone_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          booking_id?: string
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          order_index?: number
+          status?: Database["public"]["Enums"]["milestone_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "milestones_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
           bio: string | null
+          category: string | null
           created_at: string
           full_name: string | null
           headline: string | null
           hourly_rate: number | null
           id: string
+          portfolio_url: string | null
+          resume_url: string | null
           skills: string[] | null
           updated_at: string
+          years_experience: number | null
         }
         Insert: {
           avatar_url?: string | null
           bio?: string | null
+          category?: string | null
           created_at?: string
           full_name?: string | null
           headline?: string | null
           hourly_rate?: number | null
           id: string
+          portfolio_url?: string | null
+          resume_url?: string | null
           skills?: string[] | null
           updated_at?: string
+          years_experience?: number | null
         }
         Update: {
           avatar_url?: string | null
           bio?: string | null
+          category?: string | null
           created_at?: string
           full_name?: string | null
           headline?: string | null
           hourly_rate?: number | null
           id?: string
+          portfolio_url?: string | null
+          resume_url?: string | null
           skills?: string[] | null
           updated_at?: string
+          years_experience?: number | null
         }
         Relationships: []
+      }
+      proposals: {
+        Row: {
+          bid_amount: number
+          cover_letter: string
+          created_at: string
+          estimated_days: number | null
+          freelancer_id: string
+          id: string
+          job_post_id: string
+          status: Database["public"]["Enums"]["proposal_status"]
+          updated_at: string
+        }
+        Insert: {
+          bid_amount: number
+          cover_letter: string
+          created_at?: string
+          estimated_days?: number | null
+          freelancer_id: string
+          id?: string
+          job_post_id: string
+          status?: Database["public"]["Enums"]["proposal_status"]
+          updated_at?: string
+        }
+        Update: {
+          bid_amount?: number
+          cover_letter?: string
+          created_at?: string
+          estimated_days?: number | null
+          freelancer_id?: string
+          id?: string
+          job_post_id?: string
+          status?: Database["public"]["Enums"]["proposal_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proposals_freelancer_id_fkey"
+            columns: ["freelancer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proposals_job_post_id_fkey"
+            columns: ["job_post_id"]
+            isOneToOne: false
+            referencedRelation: "job_posts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       reviews: {
         Row: {
@@ -155,6 +324,87 @@ export type Database = {
             columns: ["booking_id"]
             isOneToOne: false
             referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      saved_freelancers: {
+        Row: {
+          client_id: string
+          created_at: string
+          freelancer_id: string
+          id: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          freelancer_id: string
+          id?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          freelancer_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_freelancers_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "saved_freelancers_freelancer_id_fkey"
+            columns: ["freelancer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      time_logs: {
+        Row: {
+          booking_id: string
+          created_at: string
+          freelancer_id: string
+          hours: number
+          id: string
+          logged_for: string
+          notes: string | null
+        }
+        Insert: {
+          booking_id: string
+          created_at?: string
+          freelancer_id: string
+          hours: number
+          id?: string
+          logged_for?: string
+          notes?: string | null
+        }
+        Update: {
+          booking_id?: string
+          created_at?: string
+          freelancer_id?: string
+          hours?: number
+          id?: string
+          logged_for?: string
+          notes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "time_logs_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "time_logs_freelancer_id_fkey"
+            columns: ["freelancer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -205,6 +455,11 @@ export type Database = {
         | "declined"
         | "completed"
         | "cancelled"
+      budget_type: "fixed" | "hourly"
+      contract_type: "fixed" | "hourly"
+      job_status: "open" | "closed" | "archived"
+      milestone_status: "pending" | "funded" | "released" | "cancelled"
+      proposal_status: "pending" | "accepted" | "rejected" | "withdrawn"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -340,6 +595,11 @@ export const Constants = {
         "completed",
         "cancelled",
       ],
+      budget_type: ["fixed", "hourly"],
+      contract_type: ["fixed", "hourly"],
+      job_status: ["open", "closed", "archived"],
+      milestone_status: ["pending", "funded", "released", "cancelled"],
+      proposal_status: ["pending", "accepted", "rejected", "withdrawn"],
     },
   },
 } as const

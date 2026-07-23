@@ -24,9 +24,12 @@ export const Route = createFileRoute("/_authenticated/bookings/$id")({
 type Booking = {
   id: string; title: string; description: string | null; status: string;
   client_id: string; freelancer_id: string; scheduled_for: string | null; price: number | null; created_at: string;
+  contract_type: "fixed" | "hourly"; hourly_rate: number | null;
 };
 type Message = { id: string; booking_id: string; sender_id: string; body: string; created_at: string };
 type Review = { id: string; reviewer_id: string; reviewee_id: string; rating: number; comment: string | null };
+type Milestone = { id: string; booking_id: string; title: string; amount: number; due_date: string | null; status: string; order_index: number };
+type TimeLog = { id: string; booking_id: string; freelancer_id: string; hours: number; notes: string | null; logged_for: string; created_at: string };
 
 const statusColors: Record<string, string> = {
   pending: "bg-amber-100 text-amber-900",
@@ -178,6 +181,10 @@ function BookingPage() {
               onSubmitted={(r) => setReviews([...reviews, r])} />
           )}
           <ReviewsSummary reviews={reviews} profiles={profiles} />
+          <MilestonesPanel bookingId={booking.id} isClient={isClient} />
+          {booking.contract_type === "hourly" && (
+            <TimeLogsPanel bookingId={booking.id} isFreelancer={isFreelancer} hourlyRate={booking.hourly_rate} />
+          )}
         </aside>
       </main>
     </div>
@@ -240,6 +247,143 @@ function ReviewsSummary({ reviews, profiles }: { reviews: Review[]; profiles: Ma
           );
         })}
       </div>
+    </div>
+  );
+}
+
+function MilestonesPanel({ bookingId, isClient }: { bookingId: string; isClient: boolean }) {
+  const [items, setItems] = useState<Milestone[]>([]);
+  const [title, setTitle] = useState("");
+  const [amount, setAmount] = useState("");
+  const [due, setDue] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase.from("milestones").select("*").eq("booking_id", bookingId).order("order_index");
+      setItems((data ?? []) as Milestone[]);
+    })();
+  }, [bookingId]);
+
+  async function add(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    const { data, error } = await supabase.from("milestones").insert({
+      booking_id: bookingId, title, amount: Number(amount),
+      due_date: due || null, order_index: items.length,
+    }).select().single();
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    setItems([...items, data as Milestone]);
+    setTitle(""); setAmount(""); setDue("");
+  }
+
+  async function setStatus(m: Milestone, status: "pending" | "funded" | "released" | "cancelled") {
+    const { error } = await supabase.from("milestones").update({ status }).eq("id", m.id);
+    if (error) return toast.error(error.message);
+    setItems(items.map((x) => x.id === m.id ? { ...x, status } : x));
+  }
+
+  const total = items.reduce((s, m) => s + Number(m.amount), 0);
+  const released = items.filter((m) => m.status === "released").reduce((s, m) => s + Number(m.amount), 0);
+
+  return (
+    <div className="rounded-2xl border border-border bg-card p-5">
+      <div className="flex items-center justify-between">
+        <h3 className="font-semibold">Milestones</h3>
+        <span className="text-xs text-muted-foreground">${released.toFixed(0)} / ${total.toFixed(0)}</span>
+      </div>
+      <div className="mt-3 space-y-2">
+        {items.length === 0 && <p className="text-xs text-muted-foreground">No milestones yet.</p>}
+        {items.map((m) => (
+          <div key={m.id} className="rounded-lg border border-border p-3 text-sm">
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                <p className="truncate font-medium">{m.title}</p>
+                <p className="text-xs text-muted-foreground">${m.amount}{m.due_date ? ` · due ${new Date(m.due_date).toLocaleDateString()}` : ""}</p>
+              </div>
+              <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] uppercase">{m.status}</span>
+            </div>
+            <div className="mt-2 flex flex-wrap gap-1">
+              {isClient && m.status === "pending" && <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setStatus(m, "funded")}>Fund</Button>}
+              {isClient && m.status === "funded" && <Button size="sm" className="h-7 text-xs" onClick={() => setStatus(m, "released")}>Release</Button>}
+              {m.status !== "released" && m.status !== "cancelled" && <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setStatus(m, "cancelled")}>Cancel</Button>}
+            </div>
+          </div>
+        ))}
+      </div>
+      <form onSubmit={add} className="mt-3 space-y-2 border-t border-border pt-3">
+        <Input placeholder="Milestone title" value={title} onChange={(e) => setTitle(e.target.value)} required className="h-9" />
+        <div className="grid grid-cols-2 gap-2">
+          <Input type="number" min="1" placeholder="Amount $" value={amount} onChange={(e) => setAmount(e.target.value)} required className="h-9" />
+          <Input type="date" value={due} onChange={(e) => setDue(e.target.value)} className="h-9" />
+        </div>
+        <Button type="submit" size="sm" className="w-full" disabled={busy}>Add milestone</Button>
+      </form>
+    </div>
+  );
+}
+
+function TimeLogsPanel({ bookingId, isFreelancer, hourlyRate }: { bookingId: string; isFreelancer: boolean; hourlyRate: number | null }) {
+  const [logs, setLogs] = useState<TimeLog[]>([]);
+  const [hours, setHours] = useState("");
+  const [notes, setNotes] = useState("");
+  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase.from("time_logs").select("*").eq("booking_id", bookingId).order("logged_for", { ascending: false });
+      setLogs((data ?? []) as TimeLog[]);
+    })();
+  }, [bookingId]);
+
+  async function add(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    const { data: u } = await supabase.auth.getUser();
+    if (!u.user) return;
+    const { data, error } = await supabase.from("time_logs").insert({
+      booking_id: bookingId, freelancer_id: u.user.id,
+      hours: Number(hours), notes: notes || null, logged_for: date,
+    }).select().single();
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    setLogs([data as TimeLog, ...logs]);
+    setHours(""); setNotes("");
+  }
+
+  const totalHours = logs.reduce((s, l) => s + Number(l.hours), 0);
+  const owed = hourlyRate ? totalHours * Number(hourlyRate) : 0;
+
+  return (
+    <div className="rounded-2xl border border-border bg-card p-5">
+      <div className="flex items-center justify-between">
+        <h3 className="font-semibold">Time logs</h3>
+        <span className="text-xs text-muted-foreground">{totalHours.toFixed(1)}h{hourlyRate ? ` · $${owed.toFixed(0)}` : ""}</span>
+      </div>
+      <div className="mt-3 max-h-56 space-y-2 overflow-y-auto">
+        {logs.length === 0 && <p className="text-xs text-muted-foreground">No hours logged yet.</p>}
+        {logs.map((l) => (
+          <div key={l.id} className="rounded-lg border border-border p-2 text-xs">
+            <div className="flex items-center justify-between">
+              <span className="font-medium">{l.hours}h</span>
+              <span className="text-muted-foreground">{new Date(l.logged_for).toLocaleDateString()}</span>
+            </div>
+            {l.notes && <p className="mt-1 text-muted-foreground">{l.notes}</p>}
+          </div>
+        ))}
+      </div>
+      {isFreelancer && (
+        <form onSubmit={add} className="mt-3 space-y-2 border-t border-border pt-3">
+          <div className="grid grid-cols-2 gap-2">
+            <Input type="number" step="0.25" min="0.25" placeholder="Hours" value={hours} onChange={(e) => setHours(e.target.value)} required className="h-9" />
+            <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="h-9" />
+          </div>
+          <Input placeholder="Notes (optional)" value={notes} onChange={(e) => setNotes(e.target.value)} className="h-9" />
+          <Button type="submit" size="sm" className="w-full" disabled={busy}>Log time</Button>
+        </form>
+      )}
     </div>
   );
 }

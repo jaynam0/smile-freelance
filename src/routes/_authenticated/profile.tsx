@@ -20,12 +20,15 @@ export const Route = createFileRoute("/_authenticated/profile")({
   component: ProfilePage,
 });
 
+const CATEGORIES = ["Design", "Development", "Writing", "Marketing", "Video & Animation", "Data & AI", "Admin & Support", "Other"];
+
 function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [roles, setRoles] = useState<string[]>([]);
   const [form, setForm] = useState({
     full_name: "", headline: "", bio: "", hourly_rate: "", skills: "", avatar_url: "",
+    category: "", years_experience: "", resume_url: "", portfolio_url: "",
   });
 
   useEffect(() => {
@@ -44,6 +47,10 @@ function ProfilePage() {
         hourly_rate: p.hourly_rate?.toString() ?? "",
         skills: (p.skills ?? []).join(", "),
         avatar_url: p.avatar_url ?? "",
+        category: p.category ?? "",
+        years_experience: p.years_experience?.toString() ?? "",
+        resume_url: p.resume_url ?? "",
+        portfolio_url: p.portfolio_url ?? "",
       });
       setLoading(false);
     })();
@@ -61,6 +68,10 @@ function ProfilePage() {
       hourly_rate: form.hourly_rate ? Number(form.hourly_rate) : null,
       skills: form.skills ? form.skills.split(",").map((s) => s.trim()).filter(Boolean) : [],
       avatar_url: form.avatar_url || null,
+      category: form.category || null,
+      years_experience: form.years_experience ? Number(form.years_experience) : null,
+      resume_url: form.resume_url || null,
+      portfolio_url: form.portfolio_url || null,
     }).eq("id", u.user.id);
     setSaving(false);
     if (error) toast.error(error.message);
@@ -89,22 +100,41 @@ function ProfilePage() {
             <div><Label htmlFor="n">Full name</Label><Input id="n" value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} required /></div>
             <div><Label htmlFor="a">Avatar URL</Label><Input id="a" value={form.avatar_url} onChange={(e) => setForm({ ...form, avatar_url: e.target.value })} placeholder="https://…" /></div>
             <div><Label htmlFor="h">Headline</Label><Input id="h" value={form.headline} onChange={(e) => setForm({ ...form, headline: e.target.value })} placeholder="e.g. Senior Product Designer" /></div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="cat">Category</Label>
+                <select id="cat" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}
+                  className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
+                  <option value="">Select…</option>
+                  {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+              <div><Label htmlFor="yrs">Years of experience</Label><Input id="yrs" type="number" min="0" value={form.years_experience} onChange={(e) => setForm({ ...form, years_experience: e.target.value })} /></div>
+            </div>
+
             <div><Label htmlFor="b">Bio</Label><Textarea id="b" rows={5} value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} /></div>
+
             <div className="grid grid-cols-2 gap-4">
               <div><Label htmlFor="r">Hourly rate ($)</Label><Input id="r" type="number" min="0" step="1" value={form.hourly_rate} onChange={(e) => setForm({ ...form, hourly_rate: e.target.value })} /></div>
-              <div><Label htmlFor="s">Skills (comma-separated)</Label><Input id="s" value={form.skills} onChange={(e) => setForm({ ...form, skills: e.target.value })} placeholder="React, UI, Copy" /></div>
+              <div><Label htmlFor="s">Skills (comma-separated)</Label><Input id="s" value={form.skills} onChange={(e) => setForm({ ...form, skills: e.target.value })} placeholder="Figma, UX, Prototyping" /></div>
             </div>
+
+            <div><Label htmlFor="res">Resume URL</Label><Input id="res" value={form.resume_url} onChange={(e) => setForm({ ...form, resume_url: e.target.value })} placeholder="https://drive.google.com/…" />
+              <p className="mt-1 text-xs text-muted-foreground">Paste a link to your resume (Drive, Dropbox, Notion, etc.)</p></div>
+            <div><Label htmlFor="port">Portfolio URL</Label><Input id="port" value={form.portfolio_url} onChange={(e) => setForm({ ...form, portfolio_url: e.target.value })} placeholder="https://…" /></div>
+
+            <div className="flex items-center justify-between border-t border-border pt-5">
+              <div className="text-sm">
+                <p className="font-medium">Roles</p>
+                <p className="text-muted-foreground">{roles.length ? roles.join(", ") : "client"}</p>
+              </div>
+              {!isFreelancer && <Button type="button" variant="outline" size="sm" onClick={becomeFreelancer}>Become a freelancer</Button>}
+            </div>
+
             <Button type="submit" disabled={saving}>{saving ? "Saving…" : "Save profile"}</Button>
           </form>
         )}
-
-        <div className="mt-6 rounded-2xl border border-border bg-card p-6">
-          <h2 className="font-semibold">Account roles</h2>
-          <p className="mt-1 text-sm text-muted-foreground">You are: {roles.length ? roles.join(", ") : "—"}</p>
-          {!isFreelancer && (
-            <Button variant="outline" className="mt-3" onClick={becomeFreelancer}>Also offer freelance services</Button>
-          )}
-        </div>
       </main>
     </div>
   );
