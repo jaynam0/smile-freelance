@@ -181,6 +181,10 @@ function BookingPage() {
               onSubmitted={(r) => setReviews([...reviews, r])} />
           )}
           <ReviewsSummary reviews={reviews} profiles={profiles} />
+          <MilestonesPanel bookingId={booking.id} isClient={isClient} />
+          {booking.contract_type === "hourly" && (
+            <TimeLogsPanel bookingId={booking.id} isFreelancer={isFreelancer} hourlyRate={booking.hourly_rate} />
+          )}
         </aside>
       </main>
     </div>
