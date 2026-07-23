@@ -24,9 +24,12 @@ export const Route = createFileRoute("/_authenticated/bookings/$id")({
 type Booking = {
   id: string; title: string; description: string | null; status: string;
   client_id: string; freelancer_id: string; scheduled_for: string | null; price: number | null; created_at: string;
+  contract_type: "fixed" | "hourly"; hourly_rate: number | null;
 };
 type Message = { id: string; booking_id: string; sender_id: string; body: string; created_at: string };
 type Review = { id: string; reviewer_id: string; reviewee_id: string; rating: number; comment: string | null };
+type Milestone = { id: string; booking_id: string; title: string; amount: number; due_date: string | null; status: string; order_index: number };
+type TimeLog = { id: string; booking_id: string; freelancer_id: string; hours: number; notes: string | null; logged_for: string; created_at: string };
 
 const statusColors: Record<string, string> = {
   pending: "bg-amber-100 text-amber-900",
