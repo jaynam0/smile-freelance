@@ -10,7 +10,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
-const searchSchema = z.object({ mode: z.enum(["signin", "signup"]).optional() });
+const searchSchema = z.object({
+  mode: z.enum(["signin", "signup"]).optional(),
+  next: z.string().optional(),
+});
+
+function safeNext(next: string | undefined): string {
+  if (!next || !next.startsWith("/") || next.startsWith("//")) return "/dashboard";
+  return next;
+}
 
 export const Route = createFileRoute("/auth")({
   validateSearch: searchSchema,
@@ -36,7 +44,9 @@ function AuthPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => { if (user) navigate({ to: "/dashboard", replace: true }); }, [user, navigate]);
+  const next = safeNext(search.next);
+
+  useEffect(() => { if (user) navigate({ to: next, replace: true }); }, [user, navigate, next]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -45,7 +55,7 @@ function AuthPage() {
       if (mode === "signup") {
         const { data, error } = await supabase.auth.signUp({
           email, password,
-          options: { emailRedirectTo: window.location.origin, data: { full_name: name } },
+          options: { emailRedirectTo: `${window.location.origin}${next}`, data: { full_name: name } },
         });
         if (error) throw error;
         if (data.user) {
@@ -56,6 +66,7 @@ function AuthPage() {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         toast.success("Signed in");
+        navigate({ to: next, replace: true });
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Auth failed");
@@ -66,7 +77,9 @@ function AuthPage() {
 
   async function handleGoogle() {
     setLoading(true);
-    const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
+    const result = await lovable.auth.signInWithOAuth("google", {
+      redirect_uri: `${window.location.origin}${next}`,
+    });
     if (result.error) {
       toast.error("Google sign-in failed");
       setLoading(false);
@@ -81,7 +94,7 @@ function AuthPage() {
         await supabase.from("user_roles").insert({ user_id: userData.user.id, role: "client" });
       }
     }
-    navigate({ to: "/dashboard" });
+    navigate({ to: next, replace: true });
   }
 
   return (
