@@ -91,7 +91,7 @@ function BookingPage() {
     if (error) { toast.error(error.message); setInput(body); }
   }
 
-  async function setStatus(status: string) {
+  async function setStatus(status: "pending" | "accepted" | "declined" | "completed" | "cancelled") {
     const { error } = await supabase.from("bookings").update({ status }).eq("id", id);
     if (error) toast.error(error.message);
     else { setBooking(booking ? { ...booking, status } : null); toast.success(`Booking ${status}`); }
