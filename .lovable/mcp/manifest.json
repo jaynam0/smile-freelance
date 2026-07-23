@@ -1,0 +1,274 @@
+{
+  "version": 1,
+  "sdk_version": "0.24.0",
+  "path": "/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://mejepolqielkftdskajw.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "craftroll-mcp",
+      "version": "0.1.0",
+      "title": "Craftroll MCP"
+    },
+    "tools": [
+      {
+        "name": "list_open_jobs",
+        "title": "Browse open jobs",
+        "description": "List open job posts on the freelance marketplace, optionally filtered by category or skill.",
+        "annotations": {
+          "readOnlyHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "category": {
+              "description": "Filter by category (e.g. 'design', 'writing').",
+              "type": "string"
+            },
+            "skill": {
+              "description": "Filter by a required skill.",
+              "type": "string"
+            },
+            "limit": {
+              "default": 20,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "search_freelancers",
+        "title": "Search freelancers",
+        "description": "Search freelancer profiles by category, skill, or max hourly rate.",
+        "annotations": {
+          "readOnlyHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "category": {
+              "type": "string"
+            },
+            "skill": {
+              "type": "string"
+            },
+            "max_hourly_rate": {
+              "type": "number",
+              "minimum": 0
+            },
+            "limit": {
+              "default": 20,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "create_job_post",
+        "title": "Post a job",
+        "description": "Create a new open job post as the signed-in user (client).",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "title": {
+              "type": "string",
+              "minLength": 3,
+              "maxLength": 200
+            },
+            "description": {
+              "type": "string",
+              "minLength": 10
+            },
+            "category": {
+              "type": "string"
+            },
+            "skills": {
+              "maxItems": 20,
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "budget_type": {
+              "default": "fixed",
+              "type": "string",
+              "enum": [
+                "fixed",
+                "hourly"
+              ]
+            },
+            "budget_min": {
+              "type": "number",
+              "minimum": 0
+            },
+            "budget_max": {
+              "type": "number",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "title",
+            "description"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "submit_proposal",
+        "title": "Submit a proposal",
+        "description": "Submit a proposal to an open job post as the signed-in freelancer.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "job_post_id": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "bid_amount": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "cover_letter": {
+              "type": "string",
+              "minLength": 10
+            },
+            "estimated_days": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "job_post_id",
+            "bid_amount",
+            "cover_letter"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_my_bookings",
+        "title": "List my bookings",
+        "description": "List bookings where the signed-in user is either the client or the freelancer.",
+        "annotations": {
+          "readOnlyHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "status": {
+              "description": "Filter by booking status.",
+              "type": "string",
+              "enum": [
+                "pending",
+                "accepted",
+                "declined",
+                "completed",
+                "cancelled"
+              ]
+            },
+            "limit": {
+              "default": 20,
+              "description": "Max rows.",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_messages",
+        "title": "List booking messages",
+        "description": "List chat messages in a booking the signed-in user participates in.",
+        "annotations": {
+          "readOnlyHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "booking_id": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "limit": {
+              "default": 50,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200
+            }
+          },
+          "required": [
+            "booking_id"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "send_message",
+        "title": "Send booking message",
+        "description": "Send a chat message in a booking the signed-in user participates in.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "booking_id": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "body": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4000
+            }
+          },
+          "required": [
+            "booking_id",
+            "body"
+          ]
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
