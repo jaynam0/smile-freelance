@@ -3,6 +3,7 @@ import { Briefcase, LogOut, User as UserIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export function Header() {
   const { user, loading } = useAuth();
@@ -38,6 +39,8 @@ export function Header() {
           )}
         </nav>
         <div className="flex items-center gap-2">
+          <ThemeToggle />
+
           {loading ? null : user ? (
             <>
               <Button asChild variant="ghost" size="sm">
