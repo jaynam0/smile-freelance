@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
+import { Briefcase, Sparkles, User as UserIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { useAuth } from "@/hooks/useAuth";
@@ -9,6 +10,25 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+
+const DEMO_CREDENTIALS = [
+  {
+    role: "client" as const,
+    label: "Demo Client",
+    email: "client@test.com",
+    password: "TestPassword!2026",
+    badge: "Client",
+    hint: "Hire & post jobs",
+  },
+  {
+    role: "freelancer" as const,
+    label: "Demo Freelancer",
+    email: "freelancer@test.com",
+    password: "TestPassword!2026",
+    badge: "Freelancer",
+    hint: "Offer services",
+  },
+];
 
 const searchSchema = z.object({
   mode: z.enum(["signin", "signup"]).optional(),
@@ -47,6 +67,32 @@ function AuthPage() {
   const next = safeNext(search.next);
 
   useEffect(() => { if (user) navigate({ to: next, replace: true }); }, [user, navigate, next]);
+
+  function handleFillCredentials(demoEmail: string, demoPassword: string, demoRole: "client" | "freelancer") {
+    setEmail(demoEmail);
+    setPassword(demoPassword);
+    if (mode === "signup") {
+      setRole(demoRole);
+      setName(demoRole === "client" ? "Default Client" : "Default Freelancer");
+    }
+    toast.info(`Filled credentials for ${demoEmail}`);
+  }
+
+  async function handleQuickSignIn(demoEmail: string, demoPassword: string) {
+    setEmail(demoEmail);
+    setPassword(demoPassword);
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email: demoEmail, password: demoPassword });
+      if (error) throw error;
+      toast.success("Signed in successfully");
+      navigate({ to: next, replace: true });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Auth failed");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -151,6 +197,69 @@ function AuthPage() {
             </Button>
           </form>
 
+          {/* Default Demo Credentials */}
+          <div className="mt-6 rounded-xl border border-dashed border-border bg-muted/40 p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <Sparkles className="h-3.5 w-3.5 text-primary" />
+                Default Test Credentials
+              </div>
+              <span className="text-[10px] text-muted-foreground">Demo Accounts</span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              {DEMO_CREDENTIALS.map((demo) => {
+                const Icon = demo.role === "client" ? UserIcon : Briefcase;
+                return (
+                  <div
+                    key={demo.role}
+                    className="flex flex-col justify-between rounded-lg border border-border bg-card/90 p-3 shadow-xs hover:border-primary/40 transition-colors"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between gap-1">
+                        <span className="flex items-center gap-1 text-xs font-semibold text-foreground">
+                          <Icon className="h-3.5 w-3.5 text-primary" />
+                          {demo.label}
+                        </span>
+                        <span className="text-[10px] rounded bg-primary/10 px-1.5 py-0.5 font-medium text-primary">
+                          {demo.badge}
+                        </span>
+                      </div>
+                      <p className="mt-1 font-mono text-[11px] text-muted-foreground truncate" title={demo.email}>
+                        {demo.email}
+                      </p>
+                    </div>
+
+                    <div className="mt-3 flex items-center gap-1.5">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-7 flex-1 px-2 text-xs"
+                        onClick={() => handleFillCredentials(demo.email, demo.password, demo.role)}
+                        disabled={loading}
+                      >
+                        Autofill
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        className="h-7 flex-1 px-2 text-xs"
+                        onClick={() => handleQuickSignIn(demo.email, demo.password)}
+                        disabled={loading}
+                      >
+                        Sign In
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <p className="mt-2.5 text-center text-[11px] text-muted-foreground">
+              Default password: <code className="rounded bg-background px-1.5 py-0.5 font-mono text-[11px] text-foreground border border-border">TestPassword!2026</code>
+            </p>
+          </div>
+
           <p className="mt-6 text-center text-sm text-muted-foreground">
             {mode === "signup" ? "Already have an account?" : "New to Craftroll?"}{" "}
             <button className="font-medium text-foreground underline" onClick={() => setMode(mode === "signup" ? "signin" : "signup")}>
@@ -162,3 +271,4 @@ function AuthPage() {
     </div>
   );
 }
+
