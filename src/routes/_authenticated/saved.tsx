@@ -27,7 +27,7 @@ function SavedPage() {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) return;
       const { data: saves } = await supabase.from("saved_freelancers").select("freelancer_id").eq("client_id", u.user.id);
-      const ids = (saves ?? []).map((s) => s.freelancer_id);
+      const ids = (saves ?? []).map((s: { freelancer_id: string }) => s.freelancer_id);
       if (!ids.length) { setItems([]); setLoading(false); return; }
       const { data } = await supabase.from("profiles").select("id, full_name, avatar_url, headline, hourly_rate").in("id", ids);
       setItems((data ?? []) as F[]);

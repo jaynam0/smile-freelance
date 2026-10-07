@@ -46,10 +46,10 @@ function Dashboard() {
         .or(`client_id.eq.${uid},freelancer_id.eq.${uid}`)
         .order("created_at", { ascending: false });
       setBookings(data ?? []);
-      const ids = [...new Set((data ?? []).flatMap((b) => [b.client_id, b.freelancer_id]))];
+      const ids = [...new Set((data ?? []).flatMap((b: Booking) => [b.client_id, b.freelancer_id]))];
       if (ids.length) {
         const { data: ps } = await supabase.from("profiles").select("id, full_name, avatar_url").in("id", ids);
-        setProfiles(new Map(ps?.map((p) => [p.id, p])));
+        setProfiles(new Map(ps?.map((p: { id: string; full_name: string | null; avatar_url: string | null }) => [p.id, p])));
       }
       setLoading(false);
     })();

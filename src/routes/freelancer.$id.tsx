@@ -41,10 +41,10 @@ function FreelancerProfile() {
       setProfile(p);
       const { data: rs } = await supabase.from("reviews").select("*").eq("reviewee_id", id).order("created_at", { ascending: false });
       if (rs?.length) {
-        const reviewerIds = [...new Set(rs.map((r) => r.reviewer_id))];
+        const reviewerIds = [...new Set(rs.map((r: Review) => r.reviewer_id))];
         const { data: revProfiles } = await supabase.from("profiles").select("id, full_name, avatar_url").in("id", reviewerIds);
-        const map = new Map(revProfiles?.map((rp) => [rp.id, rp]));
-        setReviews(rs.map((r) => ({ ...r, reviewer: map.get(r.reviewer_id) })));
+        const map = new Map(revProfiles?.map((rp: { id: string; full_name: string | null; avatar_url: string | null }) => [rp.id, rp]));
+        setReviews(rs.map((r: Review) => ({ ...r, reviewer: map.get(r.reviewer_id) })));
       } else setReviews([]);
       setLoading(false);
     })();

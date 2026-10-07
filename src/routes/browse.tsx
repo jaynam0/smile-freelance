@@ -52,7 +52,7 @@ function Browse() {
       setUid(u.user?.id ?? null);
 
       const { data: roles } = await supabase.from("user_roles").select("user_id").eq("role", "freelancer");
-      const ids = (roles ?? []).map((r) => r.user_id);
+      const ids = (roles ?? []).map((r: { user_id: string }) => r.user_id);
       if (!ids.length) { setItems([]); setLoading(false); return; }
 
       const [{ data: profiles }, { data: reviews }, savedRes] = await Promise.all([
@@ -62,16 +62,16 @@ function Browse() {
       ]);
 
       const stats = new Map<string, { sum: number; n: number }>();
-      (reviews ?? []).forEach((r) => {
+      (reviews ?? []).forEach((r: { reviewee_id: string; rating: number }) => {
         const s = stats.get(r.reviewee_id) ?? { sum: 0, n: 0 };
         s.sum += r.rating; s.n += 1; stats.set(r.reviewee_id, s);
       });
 
-      setItems((profiles ?? []).map((p) => {
+      setItems((profiles ?? []).map((p: Freelancer) => {
         const s = stats.get(p.id);
         return { ...p, avg_rating: s ? s.sum / s.n : undefined, review_count: s?.n ?? 0 };
       }));
-      setSaved(new Set((savedRes.data ?? []).map((r) => r.freelancer_id)));
+      setSaved(new Set((savedRes.data ?? []).map((r: { freelancer_id: string }) => r.freelancer_id)));
       setLoading(false);
     })();
   }, []);
