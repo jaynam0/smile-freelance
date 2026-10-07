@@ -41,10 +41,10 @@ function Inbox() {
         withLast.push({ ...b, last: m?.body ?? null });
       }
       setRows(withLast);
-      const ids = [...new Set(bookings.flatMap((b) => [b.client_id, b.freelancer_id]))];
+      const ids = [...new Set(bookings.flatMap((b: Row) => [b.client_id, b.freelancer_id]))];
       if (ids.length) {
         const { data: ps } = await supabase.from("profiles").select("id, full_name, avatar_url").in("id", ids);
-        setProfiles(new Map(ps?.map((p) => [p.id, p])));
+        setProfiles(new Map(ps?.map((p: { id: string; full_name: string | null; avatar_url: string | null }) => [p.id, p])));
       }
       setLoading(false);
     })();

@@ -65,7 +65,7 @@ function BookingPage() {
         ]);
         setMessages(msgs ?? []);
         setReviews(rvs ?? []);
-        setProfiles(new Map(ps?.map((p) => [p.id, p])));
+        setProfiles(new Map(ps?.map((p: { id: string; full_name: string | null; avatar_url: string | null }) => [p.id, p])));
       }
       setLoading(false);
     })();
@@ -76,7 +76,7 @@ function BookingPage() {
     const ch = supabase.channel(`msg-${id}`).on(
       "postgres_changes",
       { event: "INSERT", schema: "public", table: "messages", filter: `booking_id=eq.${id}` },
-      (payload) => {
+      (payload: { new: Message }) => {
         setMessages((prev) => prev.some((m) => m.id === (payload.new as Message).id) ? prev : [...prev, payload.new as Message]);
       },
     ).subscribe();

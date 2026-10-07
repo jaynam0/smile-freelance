@@ -65,10 +65,10 @@ function JobDetail() {
         if (u.user.id === j.client_id) {
           const { data: props } = await supabase.from("proposals").select("*").eq("job_post_id", id).order("created_at");
           setAllProposals((props ?? []) as Proposal[]);
-          const fids = (props ?? []).map((p) => p.freelancer_id);
+          const fids = (props ?? []).map((p: Proposal) => p.freelancer_id);
           if (fids.length) {
             const { data: fs } = await supabase.from("profiles").select("id, full_name, avatar_url").in("id", fids);
-            setFreelancers(new Map(fs?.map((f) => [f.id, f])));
+            setFreelancers(new Map(fs?.map((f: { id: string; full_name: string | null; avatar_url: string | null }) => [f.id, f])));
           }
         } else {
           const { data: mp } = await supabase.from("proposals").select("*").eq("job_post_id", id).eq("freelancer_id", u.user.id).maybeSingle();

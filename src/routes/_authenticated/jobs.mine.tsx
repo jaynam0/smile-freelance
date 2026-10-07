@@ -28,13 +28,13 @@ function MyJobs() {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) return;
       const { data: jobs } = await supabase.from("job_posts").select("id, title, status, created_at, budget_type").eq("client_id", u.user.id).order("created_at", { ascending: false });
-      const ids = (jobs ?? []).map((j) => j.id);
+      const ids = (jobs ?? []).map((j: Job) => j.id);
       const counts = new Map<string, number>();
       if (ids.length) {
         const { data: props } = await supabase.from("proposals").select("job_post_id").in("job_post_id", ids);
-        (props ?? []).forEach((p) => counts.set(p.job_post_id, (counts.get(p.job_post_id) ?? 0) + 1));
+        (props ?? []).forEach((p: { job_post_id: string }) => counts.set(p.job_post_id, (counts.get(p.job_post_id) ?? 0) + 1));
       }
-      setItems((jobs ?? []).map((j) => ({ ...j, proposal_count: counts.get(j.id) ?? 0 })));
+      setItems((jobs ?? []).map((j: Job) => ({ ...j, proposal_count: counts.get(j.id) ?? 0 })));
       setLoading(false);
     })();
   }, []);
@@ -54,7 +54,7 @@ function MyJobs() {
             </div>
           ) : (
             <div className="mt-8 space-y-3">
-              {items.map((j) => (
+              {items.map((j: Job) => (
                 <Link key={j.id} to="/jobs/$id" params={{ id: j.id }}
                   className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 hover:border-accent">
                   <div>

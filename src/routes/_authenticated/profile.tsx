@@ -39,7 +39,7 @@ function ProfilePage() {
         supabase.from("profiles").select("*").eq("id", u.user.id).maybeSingle(),
         supabase.from("user_roles").select("role").eq("user_id", u.user.id),
       ]);
-      setRoles((r ?? []).map((x) => x.role));
+      setRoles((r ?? []).map((x: { role: string }) => x.role));
       if (p) setForm({
         full_name: p.full_name ?? "",
         headline: p.headline ?? "",
