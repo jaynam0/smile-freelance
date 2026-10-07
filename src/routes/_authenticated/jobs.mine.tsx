@@ -54,7 +54,7 @@ function MyJobs() {
             </div>
           ) : (
             <div className="mt-8 space-y-3">
-              {items.map((j: Job) => (
+              {items.map((j) => (
                 <Link key={j.id} to="/jobs/$id" params={{ id: j.id }}
                   className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 hover:border-accent">
                   <div>
